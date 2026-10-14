@@ -1,0 +1,177 @@
+/* --- VARIABLES --- */
+$maroon: #800000;
+$gold: #F2A700;
+$gold-shadow: #d98a00;
+$cream: #fff9f0;
+$blue-link: #0076a3;
+
+.auth-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background-color: $cream;
+  margin: 0;
+  overflow: hidden;
+}
+
+.hero-section {
+  flex: 4;
+  padding: 40px 80px; 
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  color: $maroon;
+  position: relative;
+  
+  background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)), 
+              url('https://images.pexels.com/photos/5234743/pexels-photo-5234743.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'); 
+  background-size: cover;
+  background-position: center;
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 40px;
+
+    img {
+      width: 65px;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      transform: translateY(2px); 
+    }
+
+    .brand-name {
+      color: #F4A100;
+      font-weight: bold;
+      font-size: 2.2rem;
+      margin: 0;
+      line-height: 1;
+    }
+  }
+
+  .quote {
+    position: relative;
+    z-index: 2;
+    font-size: 2.2rem;
+    max-width: 420px;
+    line-height: 1.3;
+    font-weight: bold;
+    font-style: italic;
+    text-shadow: 1px 1px 4px rgba(255, 255, 255, 0.8);
+    margin-top: 0; 
+  }
+}
+
+.form-section {
+  flex: 6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 50px;
+
+  .auth-card {
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+
+    h2 {
+      color: $maroon;
+      font-size: 2.1rem;
+      margin-bottom: 40px;
+      font-weight: bold;
+      span { color: $gold; }
+    }
+  }
+}
+
+/* INPUT FIELD STYLES */
+.input-group {
+  margin-bottom: 25px;
+  text-align: left;
+
+  input {
+    width: 100%;
+    padding: 16px 20px;
+    border: 1.5px solid $maroon;
+    border-radius: 12px;
+    background: white;
+    font-size: 1.05rem;
+    outline: none;
+    box-sizing: border-box; // Prevents input from overflowing
+
+    &::placeholder { color: $maroon; opacity: 0.6; }
+  }
+
+  .helper-links {
+    text-align: right;
+    margin-top: 10px;
+    a { font-size: 0.9rem; color: $blue-link; text-decoration: none; font-weight: 500; }
+  }
+}
+
+/* --- NEW: PASSWORD WRAPPER & TOGGLE --- */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    padding-right: 50px !important;
+  }
+
+  .visibility-toggle {
+    position: absolute;
+    right: 15px;
+    cursor: pointer;
+    font-size: 1.3rem;
+    user-select: none;
+    z-index: 10;
+    line-height: 1;
+    
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+}
+
+/* THE 3D LOG IN BUTTON */
+.btn-save-3d {
+  width: 100%;
+  padding: 14px 20px;
+  background: $gold;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 1.15rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: block;
+  
+  box-shadow: 0 5px 0 $gold-shadow; 
+  transition: all 0.1s ease;
+
+  &:active {
+    box-shadow: 0 2px 0 $gold-shadow;
+    transform: translateY(3px);
+  }
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+}
+
+.switch-auth {
+  margin-top: 30px;
+  font-size: 0.9rem;
+  color: #333;
+
+  a { 
+    color: $blue-link; 
+    font-weight: bold; 
+    text-decoration: none; 
+  }
+}

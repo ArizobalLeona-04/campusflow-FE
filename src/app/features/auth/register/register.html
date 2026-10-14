@@ -1,0 +1,60 @@
+<div class="auth-wrapper">
+  <div class="form-side">
+    <div class="brand">
+      <img src="/assets/cf-logo.png" alt="Logo">
+      <span class="brand-name">CampusFlow</span>
+    </div>
+
+    <div class="form-container">
+      <h2 class="title">Create <span class="highlight">Account</span></h2>
+      
+      <form #registerForm="ngForm">
+        <div class="input-field">
+          <input 
+            type="text" 
+            name="username" 
+            [(ngModel)]="userData.username" 
+            placeholder="Full Name" 
+            required>
+        </div>
+
+        <div class="input-field">
+          <input 
+            type="email" 
+            name="email" 
+            [(ngModel)]="userData.email" 
+            placeholder="Email Address" 
+            required>
+        </div>
+
+        <div class="input-field">
+          <input 
+            type="password" 
+            name="password" 
+            [(ngModel)]="userData.password" 
+            placeholder="Password" 
+            required>
+        </div>
+
+        <div class="input-field">
+          <input 
+            type="password" 
+            name="confirmPassword" 
+            [(ngModel)]="userData.confirmPassword" 
+            placeholder="Confirm Password" 
+            required>
+        </div>
+
+        <button type="button" class="btn-save-3d" (click)="onCreateAccount()">
+          Create Account
+        </button>
+
+        <p class="login-link">
+          Already have an account? <a routerLink="/login">Login</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <div class="image-side"></div>
+</div>

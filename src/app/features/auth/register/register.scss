@@ -1,0 +1,121 @@
+/* --- VARIABLES --- */
+$maroon: #5D1A1A;
+$gold: #F4A100;
+$gold-shadow: #d98a00;
+$cream: #FAF6F0;
+
+.auth-wrapper {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background-color: $cream;
+  margin: 0;
+  overflow: hidden;
+}
+
+.form-side {
+  flex: 1;
+  padding: 50px 80px;
+  display: flex;
+  flex-direction: column;
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 40px;
+
+    img {
+      width: 65px;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      transform: translateY(2px); 
+    }
+
+    .brand-name {
+      color: $gold;
+      font-weight: bold;
+      font-size: 2.2rem;
+      margin: 0;
+      line-height: 1;
+    }
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 420px;
+    
+    .title {
+      color: $maroon;
+      font-size: 2.5rem;
+      margin-bottom: 40px;
+      font-weight: bold;
+      .highlight { color: $gold; }
+    }
+  }
+}
+
+.input-field {
+  margin-bottom: 25px;
+  
+  input {
+    width: 100%;
+    padding: 16px;
+    border: 1.5px solid $maroon;
+    border-radius: 10px;
+    outline: none;
+    box-sizing: border-box;
+    
+    &::placeholder { 
+      color: $maroon; 
+      opacity: 0.6; 
+    }
+  }
+}
+
+.btn-save-3d {
+  width: 100%;
+  background-color: $gold;
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  border-radius: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: block;
+  
+  box-shadow: 0 5px 0 $gold-shadow; 
+  transition: all 0.1s ease;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+
+  &:active {
+    box-shadow: 0 2px 0 $gold-shadow;
+    transform: translateY(3px);
+  }
+}
+
+.login-link {
+  margin-top: 25px;
+  text-align: center;
+  color: #333;
+  
+  a {
+    color: #0076a3;
+    font-weight: bold;
+    text-decoration: none;
+    
+    &:hover { text-decoration: underline; }
+  }
+}
+
+.image-side {
+  flex: 1;
+  background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop'); 
+  background-size: cover;
+  background-position: center;
+}

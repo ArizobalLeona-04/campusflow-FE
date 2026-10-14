@@ -1,0 +1,54 @@
+<div class="auth-container">
+  <div class="hero-section">
+    <div class="brand">
+      <img src="/assets/cf-logo.png" alt="Logo">
+      <span class="brand-name">CampusFlow</span>
+    </div>
+    <p class="quote">“Your Academic Community, All in One Place.”</p>
+  </div>
+
+  <div class="form-section">
+    <div class="auth-card">
+      <h2>Welcome back to <span>CampusFlow</span></h2>
+      
+      <form (ngSubmit)="onLogin()">
+        
+        <div class="input-group">
+          <input 
+            type="text" 
+            name="loginEmail"
+            [(ngModel)]="email" 
+            placeholder="Enter Email or Username" 
+            required>
+        </div>
+        
+        <div class="input-group">
+          <div class="password-wrapper">
+            <input 
+              [type]="showPassword ? 'text' : 'password'" 
+              name="loginPassword"
+              [(ngModel)]="password" 
+              placeholder="Enter Password" 
+              required>
+            
+            <span class="visibility-toggle" (click)="showPassword = !showPassword">
+              {{ showPassword ? '👁️' : '🙈' }}
+            </span>
+          </div>
+          
+          <div class="helper-links">
+            <a routerLink="/forgot-password">Forgot Password?</a>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn-save-3d" style="width: 100%; margin-top: 10px;">
+          LOG IN
+        </button>
+      </form>
+      
+      <p class="switch-auth">
+        No account yet? <a routerLink="/register">Register here</a>
+      </p>
+    </div>
+  </div>
+</div>

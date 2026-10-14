@@ -1,0 +1,133 @@
+
+<div class="modal-overlay" (click)="close.emit()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+
+    <h2 class="title">Create New <span class="highlight-text">Booking</span></h2>
+
+    <div class="booking-tabs">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active-one-time]="selectedType === 'One-Time'"
+        (click)="selectedType = 'One-Time'">
+        <span class="icon">📅</span> One-Time
+      </button>
+
+      <div class="divider"></div>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active-recurring]="selectedType === 'Recurring'"
+        (click)="selectedType = 'Recurring'">
+        <span class="icon">🔄</span> Recurring
+      </button>
+    </div>
+
+    <div class="form-grid">
+
+      <label>Date:</label>
+      <div class="form-value text-only">
+        {{ selectedDate }}
+      </div>
+
+      <label>Room:</label>
+      <div class="form-value text-only">
+        {{ roomName }}
+      </div>
+
+      <label>Period:</label>
+      <div class="form-value dropdown-wrapper">
+        <select
+          [(ngModel)]="data.period"
+          name="period"
+          class="native-look">
+          <option value="" disabled>(None)</option>
+          <option *ngFor="let p of periods" [value]="p.label">
+            {{ p.label }}
+          </option>
+        </select>
+        <span class="arrow-icon">▼</span>
+      </div>
+
+      <label>Subject/Department:</label>
+      <div class="form-value dropdown-wrapper">
+        <select
+          [(ngModel)]="data.department"
+          name="subject"
+          class="native-look">
+          <option value="" disabled>Select Subject</option>
+          <option *ngFor="let s of subjects" [value]="s.name">
+            {{ s.name }}
+          </option>
+        </select>
+        <span class="arrow-icon">▼</span>
+      </div>
+
+      <label>Booked By:</label>
+      <div class="form-value dropdown-wrapper">
+        <select
+          [(ngModel)]="selectedStaff"
+          name="bookedBy"
+          class="native-look">
+          <option value="" disabled>Select User</option>
+          <option
+            *ngFor="let s of staff"
+            [value]="s.firstName + ' ' + s.lastName">
+            {{ s.firstName }} {{ s.lastName }}
+          </option>
+        </select>
+        <span class="arrow-icon">▼</span>
+      </div>
+
+      <ng-container *ngIf="selectedType === 'Recurring'">
+
+        <label>Starting from...</label>
+        <div class="form-value">
+          <input
+            type="date"
+            [(ngModel)]="data.startDate"
+            class="native-look">
+        </div>
+
+        <label>Until...</label>
+        <div class="form-value">
+
+          <div
+            class="dropdown-wrapper"
+            *ngIf="!data.showDatePicker">
+            <select
+              [(ngModel)]="data.untilDate"
+              (change)="onUntilChange()"
+              class="native-look">
+              <option value="Ending of session">Ending of session</option>
+              <option value="Pick Date">Pick specific date...</option>
+            </select>
+            <span class="arrow-icon">▼</span>
+          </div>
+
+          <div
+            class="dropdown-wrapper"
+            *ngIf="data.showDatePicker">
+            <input
+              type="date"
+              [(ngModel)]="data.customUntilDate"
+              class="native-look">
+          </div>
+
+        </div>
+      </ng-container>
+
+    </div>
+
+    <div class="button-container">
+      <button
+        type="button"
+        class="btn-create"
+        (click)="onSubmit()">
+        Create Booking
+      </button>
+    </div>
+
+  </div>
+</div>

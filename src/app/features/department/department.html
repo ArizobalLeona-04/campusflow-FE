@@ -1,0 +1,101 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo-container">
+        <img src="/assets/cf-logo.png" alt="CampusFlow Logo" class="logo">
+      </div>
+      <span class="brand-text">CampusFlow</span>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-item" 
+           routerLink="/booking" 
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{exact: true}">
+        Booking
+        <span class="arrow" *ngIf="router.url === '/booking'">></span>
+      </div>
+      
+      <div class="nav-item" 
+           routerLink="/department" 
+           routerLinkActive="active">
+        Subjects 
+        <span class="arrow" *ngIf="router.url === '/department'">></span>
+      </div>
+
+      <div class="nav-item" 
+           routerLink="/dashboard" 
+           routerLinkActive="active">
+        Dashboard
+        <span class="arrow" *ngIf="router.url === '/dashboard'">></span>
+      </div>
+      
+      <div class="nav-item" 
+           routerLink="/profile" 
+           routerLinkActive="active">
+        Profile 
+        <span class="arrow" *ngIf="router.url === '/profile'">></span>
+      </div>
+    </nav>
+
+    <div class="sign-out" (click)="onSignOut()" style="cursor: pointer;">
+      <div class="sign-out-content">
+        <span class="exit-icon">🚪</span>
+        <span class="sign-out-text">Sign Out</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <h1 class="dept-title">Subjects</h1>
+
+    <div class="create-dept-container">
+      <div class="create-dept-card">
+        <button class="add-btn" (click)="toggleAddBox()">
+          <span class="plus">{{ isAdding ? '−' : '+' }}</span>
+        </button>
+        <span class="create-label">{{ isAdding ? 'Close Input' : 'Create Subject' }}</span>
+        
+        <input 
+          *ngIf="isAdding"
+          type="text" 
+          class="dept-input" 
+          placeholder="Subject name"
+          [(ngModel)]="newSubjectName"
+          (keyup.enter)="addSubject()"
+          autofocus
+        >
+        <button *ngIf="isAdding" class="save-inline-btn" (click)="addSubject()">Save</button>
+      </div>
+    </div>
+
+    <div class="dept-table-wrapper">
+      <table class="dept-table">
+        <thead>
+          <tr>
+            <th class="col-name">Name</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let subject of subjects">
+            <td class="dept-name-cell">{{ subject.name }}</td>
+            <td class="dept-actions-cell">
+              <button class="action-btn edit" (click)="editSubject(subject)">
+                <span class="icon">✏️</span>
+              </button>
+              <button class="action-btn delete" (click)="deleteSubject(subject.id)">
+                <span class="icon">❌</span>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="subjects.length === 0">
+            <td colspan="2" style="text-align: center; padding: 20px; color: #888;">
+              No subjects found. Add your first subject above!
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>

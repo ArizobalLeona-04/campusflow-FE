@@ -1,0 +1,25 @@
+.sidebar {
+  width: 260px; height: 100vh;
+  background-color: #4A0404; // Exact maroon
+  color: white; display: flex; flex-direction: column;
+
+  .brand {
+    padding: 25px 20px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    .brand-text { color: #F8BB17; font-weight: bold; font-size: 22px; }
+  }
+
+  .nav-links {
+    flex: 1; padding-top: 20px;
+    .nav-item {
+      display: flex; align-items: center; padding: 15px 25px; gap: 15px;
+      &.active { background-color: #F8BB17; color: black; font-weight: bold; }
+      .chevron { margin-left: auto; font-size: 20px; }
+    }
+  }
+
+  .footer-signout {
+    padding: 20px 25px; border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; gap: 15px; opacity: 0.8;
+  }
+}

@@ -1,0 +1,188 @@
+@use "sass:color";
+
+$maroon: #4a0000;
+$yellow-tab: #f5a81c;
+$bg-color: #fffcf8;
+
+.layout { display: flex; height: 100vh; font-family: sans-serif; background: $bg-color; }
+
+.sidebar {
+  width: 240px; 
+  background: $maroon !important;
+  color: white; 
+  display: flex; 
+  flex-direction: column;
+  
+  .brand {
+    padding: 20px; 
+    background: #700000; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px;
+    .logo-container {
+      width: 50px; height: 50px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      .logo { width: 100%; height: 100%; object-fit: contain; display: block; }
+    }
+    .brand-text { color: #ffcc00; font-weight: bold; font-size: 1.4rem; margin: 0; }
+  }
+
+  .nav {
+    display: flex;
+    flex-direction: column;
+    background: $maroon !important;
+
+    .nav-item { 
+      padding: 15px 20px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background-color: $maroon !important; 
+      color: rgba(255, 255, 255, 0.8) !important;
+      
+      &.active { 
+        background-color: $yellow-tab !important; 
+        color: white !important;
+        font-weight: bold;
+      }
+
+      &:hover:not(.active) { 
+        background-color: rgba(255, 255, 255, 0.1) !important; 
+        color: white !important;
+      }
+      
+      .arrow { font-size: 1.1rem; }
+    }
+  }
+
+  .sign-out { 
+    margin-top: auto; 
+    padding: 20px; 
+    background-color: $maroon !important;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+
+    &:hover { 
+      background-color: color.adjust($maroon, $lightness: -5%) !important; 
+    }
+  }
+}
+
+.main { flex: 1; padding: 40px; overflow-y: auto; }
+
+.dept-title {
+  color: $yellow-tab;
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 25px;
+}
+
+.create-dept-container {
+  margin-bottom: 30px;
+  
+  .create-dept-card {
+    background: white;
+    border: 1px solid #000;
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+
+    .add-btn {
+      background: $yellow-tab;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      color: white;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      
+      &:hover { 
+        background: color.adjust($yellow-tab, $lightness: -5%); 
+      }
+    }
+
+    .create-label {
+      font-weight: 500;
+      color: #333;
+      font-size: 1rem;
+    }
+
+    .dept-input {
+      background: #e9e9e9;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 6px 12px;
+      width: 200px;
+      font-size: 0.9rem;
+      &:focus { outline: none; border-color: $yellow-tab; }
+    }
+
+    .save-inline-btn {
+      background: $maroon;
+      color: white;
+      border: none;
+      padding: 6px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-left: 10px;
+      &:hover { opacity: 0.9; }
+    }
+  }
+}
+
+.dept-table-wrapper {
+  border: 1px solid #000;
+  border-radius: 4px;
+  overflow: hidden;
+  background: white;
+}
+
+.dept-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    background: $maroon;
+    color: white;
+    text-align: left;
+    padding: 12px 20px;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  td {
+    padding: 12px 20px;
+    border-bottom: 1px solid #ddd;
+    color: #333;
+    font-size: 0.95rem;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .col-actions, .dept-actions-cell { text-align: right; }
+
+  .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px 8px;
+    transition: transform 0.1s ease;
+    
+    &:hover { transform: scale(1.2); }
+    
+    &.edit { color: $yellow-tab; }
+    &.delete { color: #c62828; margin-left: 5px; }
+  }
+}

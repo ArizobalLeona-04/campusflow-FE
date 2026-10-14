@@ -1,0 +1,146 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo-container">
+        <img src="/assets/cf-logo.png" alt="CampusFlow Logo" class="logo">
+      </div>
+      <span class="brand-text">CampusFlow</span>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-item" routerLink="/booking" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        Booking <span class="arrow" *ngIf="router.url === '/booking'">></span>
+      </div>
+      
+      <div class="nav-item" routerLink="/department" routerLinkActive="active">
+        Subjects <span class="arrow" *ngIf="router.url === '/department'">></span>
+      </div>
+
+      <div class="nav-item" routerLink="/dashboard" routerLinkActive="active">
+        Dashboard <span class="arrow" *ngIf="router.url === '/dashboard'">></span>
+      </div>
+      
+      <div class="nav-item" routerLink="/profile" routerLinkActive="active">
+        Profile <span class="arrow" *ngIf="router.url === '/profile'">></span>
+      </div>
+    </nav>
+
+    <div class="sign-out" (click)="onSignOut()" style="cursor: pointer;">
+      <div class="sign-out-content">
+        <span class="exit-icon">🚪</span>
+        <span class="sign-out-text">Sign Out</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main" *ngIf="user.email">
+    <h1 class="profile-title">Profile</h1>
+
+    <div class="profile-card info-card">
+      <div class="card-header">
+        <div class="header-text">
+          <h3>Personal Information</h3>
+          <p>Update your personal details and information</p>
+        </div>
+        <button class="btn-action-orange" (click)="isEditing ? cancelEdit() : toggleEdit()">
+          {{ isEditing ? 'CANCEL' : 'EDIT' }}
+        </button>
+      </div>
+
+      <div class="card-content">
+        <div class="avatar-container">
+          <div class="avatar-circle">{{ user.initials || '??' }}</div>
+        </div>
+        
+        <div class="form-container">
+          <div class="input-group">
+            <label>First Name</label>
+            <input type="text" [(ngModel)]="user.firstName" [disabled]="!isEditing" placeholder="Enter first name">
+          </div>
+          <div class="input-group">
+            <label>Last Name</label>
+            <input type="text" [(ngModel)]="user.lastName" [disabled]="!isEditing" placeholder="Enter last name">
+          </div>
+          <div class="input-group full-width">
+            <label>Email Address</label>
+            <input type="email" [value]="user.email" disabled class="disabled-field"> 
+          </div>
+        </div>
+      </div>
+      
+      <div class="card-footer" *ngIf="isEditing">
+        <button class="btn-action-orange" (click)="saveUserData()">DONE</button>
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <div class="card-header">
+        <div class="header-text">
+          <h3>Account Security</h3>
+          <p>Manage your password and security settings</p>
+        </div>
+        <button class="btn-action-orange" *ngIf="otpSent" (click)="resetPasswordForm()">
+          CANCEL
+        </button>
+      </div>
+      
+      <div class="card-content">
+        <div class="password-display-row" *ngIf="!otpSent">
+          <div class="input-group">
+            <label>Current Password:</label>
+            <div class="password-mask-box">
+               {{ maskedPasswordHint }}
+            </div>
+          </div>
+          <button class="btn-action-orange large-btn" (click)="sendOTP()">
+            CHANGE PASSWORD
+          </button>
+        </div>
+
+        <div class="form-container centered" *ngIf="otpSent && !isVerified">
+            <div class="input-group centered-group">
+              <label>Enter 4-Digit OTP Sent to Email</label>
+              <input type="text" [(ngModel)]="otpInput" placeholder="0 0 0 0" maxlength="4" class="otp-field">
+              <button class="btn-action-orange large-btn" (click)="verifyOTP()">VERIFY OTP</button>
+            </div>
+        </div>
+
+        <div class="form-container" *ngIf="isVerified">
+          <div class="input-group">
+            <label>Current Password</label>
+            <div class="password-wrapper">
+              <input [type]="showPassword.current ? 'text' : 'password'" [(ngModel)]="passwordData.current" placeholder="Enter current password">
+              <span class="visibility-toggle" (click)="togglePasswordVisibility('current')">
+                {{ showPassword.current ? '👁️' : '🙈' }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="input-group">
+            <label>New Password</label>
+            <div class="password-wrapper">
+              <input [type]="showPassword.new ? 'text' : 'password'" [(ngModel)]="passwordData.new" placeholder="Enter new password">
+              <span class="visibility-toggle" (click)="togglePasswordVisibility('new')">
+                {{ showPassword.new ? '👁️' : '🙈' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Confirm New Password</label>
+            <div class="password-wrapper">
+              <input [type]="showPassword.confirm ? 'text' : 'password'" [(ngModel)]="passwordData.confirm" placeholder="Confirm new password">
+              <span class="visibility-toggle" (click)="togglePasswordVisibility('confirm')">
+                {{ showPassword.confirm ? '👁️' : '🙈' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="card-footer-left">
+            <button class="btn-action-orange" (click)="updatePassword()">UPDATE PASSWORD</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
