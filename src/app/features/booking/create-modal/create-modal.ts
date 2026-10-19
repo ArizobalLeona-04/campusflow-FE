@@ -20,21 +20,19 @@ export class CreateModal implements OnInit {
 
   selectedType: 'One-Time' | 'Recurring' = 'One-Time';
 
-  // Temporary sample subjects
-  subjects: any[] = [
-    { id: 1, name: 'Application Development' },
-    { id: 2, name: 'Data Structures and Algorithms' },
-    { id: 3, name: 'Integrative Programming' },
-    { id: 4, name: 'Purposive Communication' },
-    { id: 5, name: 'Social and Professional Issues' }
-  ];
+ subjects: any[] = [
+  { id: 1, name: 'Application Development' },
+  { id: 2, name: 'Data Structures and Algorithms' },
+  { id: 3, name: 'Integrative Programming' },
+  { id: 4, name: 'Purposive Communication' },
+  { id: 5, name: 'Social and Professional Issues' }
+];
 
-  // Temporary sample staff
-  staff: any[] = [
-    { id: 1, firstName: 'Leona', lastName: 'Arizobal' },
-    { id: 2, firstName: 'Precious', lastName: 'Fillalan' },
-    { id: 3, firstName: 'Euniece Kyle', lastName: 'Puerto' }
-  ];
+staff: any[] = [
+  { id: 1, firstName: 'Leona', lastName: 'Arizobal' },
+  { id: 2, firstName: 'Precious', lastName: 'Fillalan' },
+  { id: 3, firstName: 'Euniece Kyle', lastName: 'Puerto' }
+];
 
   selectedStaff: string = 'Leona Arizobal';
 
