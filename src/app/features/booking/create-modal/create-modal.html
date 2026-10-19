@@ -2,7 +2,9 @@
 <div class="modal-overlay" (click)="close.emit()">
   <div class="modal-content" (click)="$event.stopPropagation()">
 
-    <h2 class="title">Create New <span class="highlight-text">Booking</span></h2>
+    <h2 class="title">
+      Create New <span class="highlight-text">Booking</span>
+    </h2>
 
     <div class="booking-tabs">
       <button
@@ -27,14 +29,10 @@
     <div class="form-grid">
 
       <label>Date:</label>
-      <div class="form-value text-only">
-        {{ selectedDate }}
-      </div>
+      <div class="form-value text-only">{{ selectedDate }}</div>
 
       <label>Room:</label>
-      <div class="form-value text-only">
-        {{ roomName }}
-      </div>
+      <div class="form-value text-only">{{ roomName }}</div>
 
       <label>Period:</label>
       <div class="form-value dropdown-wrapper">
@@ -93,9 +91,7 @@
         <label>Until...</label>
         <div class="form-value">
 
-          <div
-            class="dropdown-wrapper"
-            *ngIf="!data.showDatePicker">
+          <div class="dropdown-wrapper" *ngIf="!data.showDatePicker">
             <select
               [(ngModel)]="data.untilDate"
               (change)="onUntilChange()"
@@ -106,9 +102,7 @@
             <span class="arrow-icon">▼</span>
           </div>
 
-          <div
-            class="dropdown-wrapper"
-            *ngIf="data.showDatePicker">
+          <div class="dropdown-wrapper" *ngIf="data.showDatePicker">
             <input
               type="date"
               [(ngModel)]="data.customUntilDate"
