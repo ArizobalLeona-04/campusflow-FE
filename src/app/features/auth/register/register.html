@@ -8,13 +8,30 @@
     <div class="form-container">
       <h2 class="title">Create <span class="highlight">Account</span></h2>
       
+      <!-- Inline Error Banner -->
+      <div *ngIf="errorMessage" 
+           style="background-color: #fde8e8; color: #9b1c1c; border: 1px solid #f8b4b4; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; margin-bottom: 15px; text-align: center;">
+        {{ errorMessage }}
+      </div>
+
       <form #registerForm="ngForm">
         <div class="input-field">
           <input 
             type="text" 
-            name="username" 
-            [(ngModel)]="userData.username" 
-            placeholder="Full Name" 
+            name="firstName" 
+            [(ngModel)]="userData.firstName" 
+            (input)="errorMessage = ''"
+            placeholder="Enter First Name" 
+            required>
+        </div>
+
+        <div class="input-field">
+          <input 
+            type="text" 
+            name="lastName" 
+            [(ngModel)]="userData.lastName" 
+            (input)="errorMessage = ''"
+            placeholder="Enter Last Name" 
             required>
         </div>
 
@@ -23,26 +40,26 @@
             type="email" 
             name="email" 
             [(ngModel)]="userData.email" 
-            placeholder="Email Address" 
+            (input)="errorMessage = ''"
+            placeholder="Enter Email" 
             required>
         </div>
 
         <div class="input-field">
-          <input 
-            type="password" 
-            name="password" 
-            [(ngModel)]="userData.password" 
-            placeholder="Password" 
-            required>
-        </div>
-
-        <div class="input-field">
-          <input 
-            type="password" 
-            name="confirmPassword" 
-            [(ngModel)]="userData.confirmPassword" 
-            placeholder="Confirm Password" 
-            required>
+          <div style="position: relative; display: flex; align-items: center;">
+            <input 
+              [type]="showPassword ? 'text' : 'password'" 
+              name="password" 
+              [(ngModel)]="userData.password" 
+              (input)="errorMessage = ''"
+              placeholder="Enter Password" 
+              style="width: 100%;"
+              required>
+            <span (click)="showPassword = !showPassword" 
+                  style="position: absolute; right: 12px; cursor: pointer; user-select: none;">
+              {{ showPassword ? '👁️' : '🙈' }}
+            </span>
+          </div>
         </div>
 
         <button type="button" class="btn-save-3d" (click)="onCreateAccount()">

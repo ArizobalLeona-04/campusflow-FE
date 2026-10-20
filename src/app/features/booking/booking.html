@@ -8,6 +8,16 @@
     </div>
 
     <nav class="nav">
+      <!-- Show Dashboard link ONLY if user is an Admin -->
+      <div class="nav-item" 
+           *ngIf="currentUserRole === 'admin'"
+           routerLink="/dashboard" 
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{exact: true}">
+        Dashboard
+        <span class="arrow" *ngIf="router.url === '/dashboard'">></span>
+      </div>
+
       <div class="nav-item" 
            routerLink="/booking" 
            routerLinkActive="active"
@@ -21,11 +31,6 @@
         <span class="arrow" *ngIf="router.url === '/department'">></span>
       </div>
 
-      <div class="nav-item" routerLink="/dashboard" routerLinkActive="active">
-        Dashboard
-        <span class="arrow" *ngIf="router.url === '/dashboard'">></span>
-      </div>
-      
       <div class="nav-item" routerLink="/profile" routerLinkActive="active">
         Profile 
         <span class="arrow" *ngIf="router.url === '/profile'">></span>
@@ -55,13 +60,30 @@
       <button (click)="changeDate(1)">Next</button>
     </div>
 
-    <div class="tabs">
-      <button *ngFor="let b of buildings" 
-              (click)="selectBuilding(b)"
-              [class.active-blue]="selectedBuilding === b"
-              [class.inactive-yellow]="selectedBuilding !== b">
-        {{ b }}
-      </button>
+    <!-- Building Tabs and Floor Dropdown Bar -->
+    <div class="tabs-and-floors-bar" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+      
+      <div class="tabs">
+        <button *ngFor="let b of buildings" 
+                (click)="selectBuilding(b)"
+                [class.active-blue]="selectedBuilding === b"
+                [class.inactive-yellow]="selectedBuilding !== b">
+          {{ b }}
+        </button>
+      </div>
+
+      <!-- Floor Selector Dropdown -->
+      <div class="floor-selector" style="display: flex; align-items: center; gap: 8px;">
+        <label for="floorSelect" style="font-weight: bold; font-size: 0.9rem;">Floor:</label>
+        <select id="floorSelect" 
+                [(ngModel)]="selectedFloor" 
+                style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; background-color: #fff; font-weight: bold; cursor: pointer;">
+          <option *ngFor="let f of floors" [value]="f">
+            Floor {{ f }}
+          </option>
+        </select>
+      </div>
+
     </div>
 
     <table class="booking-grid">
@@ -82,11 +104,14 @@
                  [ngClass]="{
                    'booked-one-time': getBooking(room, p.label)?.booking_type === 'One-Time',
                    'booked-recurring': getBooking(room, p.label)?.booking_type === 'Recurring'
-                 }">
+                 }"
+                 [ngStyle]="getBooking(room, p.label) ? getBuildingStyle(room) : {}">
+                 
               <div class="booking-inner-content" *ngIf="getBooking(room, p.label) as booking">
                 <div class="teacher-name">{{ booking.booked_by }}</div>
-                <div class="subject-tag">{{ booking.subject }}</div>
+                <div class="subject-tag" *ngIf="booking.subject">{{ booking.subject }}</div>
               </div>
+
             </div>
           </td>
         </tr>
@@ -94,6 +119,7 @@
     </table>
   </main>
 
+  <!-- View Booking Overlay/Drawer -->
   <div class="drawer-overlay" *ngIf="isViewOpen" (click)="closeView()">
     <div class="drawer-content" (click)="$event.stopPropagation()">
       <button class="close-x-btn" (click)="closeView()">✕</button>
@@ -107,7 +133,15 @@
           <div class="value">
             <div *ngIf="selectedBooking?.booking_type === 'Recurring'">
               <div><strong>Starting from:</strong> {{ selectedBooking?.booking_date | date:'MMMM d, yyyy' }}</div>
-              <div><strong>Until:</strong> {{ selectedBooking?.until_date | date:'MMMM d, yyyy' }}</div>
+              <div>
+                <strong>Until:</strong> 
+                <ng-container *ngIf="selectedBooking?.until_date === 'Ending of session'">
+                  Ending of session
+                </ng-container>
+                <ng-container *ngIf="selectedBooking?.until_date !== 'Ending of session'">
+                  {{ selectedBooking?.until_date ? (selectedBooking?.until_date | date:'MMMM d, yyyy') : 'Ending of session' }}
+                </ng-container>
+              </div>
             </div>
             
             <div *ngIf="selectedBooking?.booking_type !== 'Recurring'">
@@ -137,7 +171,8 @@
         </div>
       </div>
 
-      <div class="cancel-action-container">
+      <!-- Cancel action: visible only to the booking's owner or an admin -->
+      <div class="cancel-action-container" *ngIf="canCancel">
         <button class="btn-cancel-action" (click)="showCancelConfirm = true">
           Cancel Booking
         </button>
@@ -154,6 +189,7 @@
   </div>
 </div>
 
+<!-- Create Modal Component -->
 <app-create-modal 
   *ngIf="isModalOpen" 
   [roomName]="targetRoom"

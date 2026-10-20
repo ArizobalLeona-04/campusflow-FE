@@ -2,12 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { HttpClient, HttpClientModule } from '@angular/common/http'; 
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, HttpClientModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './profile.html',
   styleUrls: ['./profile.scss']
 })
@@ -18,9 +17,11 @@ export class ProfileComponent implements OnInit {
     lastName: '',
     email: '',
     password: '',
-    initials: ''
+    initials: '',
+    profileImage: null
   };
 
+  currentUserRole: string = 'user';
   maskedPasswordHint: string = '';
   userBackup: any;
   isEditing: boolean = false;
@@ -29,24 +30,46 @@ export class ProfileComponent implements OnInit {
   otpSent: boolean = false;
   isVerified: boolean = false;
   otpInput: string = '';
+  generatedOtp: string = '';
 
-  passwordData = { current: '', new: '', confirm: '' };
+  passwordData = { new: '', confirm: '' };
   showPassword = { current: false, new: false, confirm: false };
 
-  private apiUrl = 'http://localhost:3000/api/users';
-
-  constructor(public router: Router, private http: HttpClient) {}
-
-  ngOnInit() {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
+  constructor(public router: Router) {}
+  
+ngOnInit() {
+  const savedUser = localStorage.getItem('currentUser');
+  if (savedUser) {
+    try {
       this.user = JSON.parse(savedUser);
-      console.log("Current User ID:", this.user.id);
-      this.generatePasswordHint();
-      this.updateInitials();
-    } else {
-      this.router.navigate(['/login']);
+      const email = this.user.email?.toLowerCase() || '';
+      const isAdminDomain = email.endsWith('@admin.com') || email.endsWith('@admin.liceo.edu.ph');
+
+      this.currentUserRole = this.user.role || (isAdminDomain ? 'admin' : 'user');
+    } catch (e) {
+      this.user = {};
+      this.currentUserRole = 'user';
     }
+    this.generatePasswordHint();
+    this.updateInitials();
+  } else {
+    this.router.navigate(['/login']);
+  }
+}
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.user.profileImage = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeProfilePicture() {
+    this.user.profileImage = null;
   }
 
   generatePasswordHint() {
@@ -54,24 +77,25 @@ export class ProfileComponent implements OnInit {
   }
 
   sendOTP() {
+    this.generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
     this.otpSent = true;
-    alert(`A security OTP code has been sent to ${this.user.email}`);
+    alert(`[LOCAL TEST] Security OTP sent to ${this.user.email}.\n\nYour code is: ${this.generatedOtp}`);
   }
 
   verifyOTP() {
-    if (this.otpInput === '1234') {
+    if (this.otpInput === this.generatedOtp || this.otpInput === '1234') {
       this.isVerified = true;
       this.isChangingPassword = true;
-      alert('Identity Verified Successfully.');
+      alert('Identity verified successfully!');
     } else {
-      alert('Invalid OTP code. Please try again.');
+      alert('Invalid OTP code. Please enter the correct code.');
     }
   }
 
   updateInitials() {
     const first = this.user.firstName?.trim().charAt(0) || '';
     const last = this.user.lastName?.trim().charAt(0) || '';
-    this.user.initials = (first + last).toUpperCase();
+    this.user.initials = (first + last).toUpperCase() || 'CF';
   }
 
   toggleEdit() {
@@ -83,20 +107,18 @@ export class ProfileComponent implements OnInit {
 
   saveUserData() {
     this.updateInitials();
-    this.http.patch(`${this.apiUrl}/${this.user.id}`, this.user).subscribe({
-      next: (updatedUser: any) => {
-        this.user = updatedUser;
-        localStorage.setItem('currentUser', JSON.stringify(this.user));
-        this.isEditing = false;
-        alert('Profile updated successfully!');
-      },
-      error: (err) => {
-        console.error('Update failed', err);
-        localStorage.setItem('currentUser', JSON.stringify(this.user));
-        this.isEditing = false;
-        alert('Profile updated locally!');
-      }
-    });
+    localStorage.setItem('currentUser', JSON.stringify(this.user));
+
+    // Keep registeredUsers array synced with personal info updates
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const idx = registeredUsers.findIndex((u: any) => u.email.toLowerCase() === this.user.email.toLowerCase());
+    if (idx !== -1) {
+      registeredUsers[idx] = { ...registeredUsers[idx], ...this.user };
+      localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+    }
+
+    this.isEditing = false;
+    alert('Profile updated successfully!');
   }
 
   cancelEdit() {
@@ -111,13 +133,8 @@ export class ProfileComponent implements OnInit {
   }
 
   updatePassword() {
-    if (!this.passwordData.current || !this.passwordData.new || !this.passwordData.confirm) {
-      alert('Please fill in all password fields.');
-      return;
-    }
-
-    if (this.passwordData.current !== this.user.password) {
-      alert('Current password is incorrect.');
+    if (!this.passwordData.new || !this.passwordData.confirm) {
+      alert('Please fill in both new password fields.');
       return;
     }
 
@@ -127,22 +144,23 @@ export class ProfileComponent implements OnInit {
     }
 
     if (this.passwordData.new.length < 6) {
-      alert('Password must be at least 6 characters.');
+      alert('Password must be at least 6 characters long.');
       return;
     }
 
-    const payload = { password: this.passwordData.new };
-    
-    this.http.patch(`${this.apiUrl}/${this.user.id}/password`, payload).subscribe({
-      next: () => {
-        this.user.password = this.passwordData.new;
-        localStorage.setItem('currentUser', JSON.stringify(this.user));
-        this.generatePasswordHint();
-        alert('Password updated successfully!');
-        this.resetPasswordForm();
-      },
-      error: () => alert('Failed to update password on the server.')
-    });
+    // Update password locally in currentUser & registeredUsers
+    this.user.password = this.passwordData.new;
+    localStorage.setItem('currentUser', JSON.stringify(this.user));
+
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const idx = registeredUsers.findIndex((u: any) => u.email.toLowerCase() === this.user.email.toLowerCase());
+    if (idx !== -1) {
+      registeredUsers[idx].password = this.passwordData.new;
+      localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+    }
+
+    alert('Password updated successfully!');
+    this.resetPasswordForm();
   }
 
   resetPasswordForm() {
@@ -150,7 +168,7 @@ export class ProfileComponent implements OnInit {
     this.otpSent = false;
     this.isVerified = false;
     this.otpInput = '';
-    this.passwordData = { current: '', new: '', confirm: '' };
+    this.passwordData = { new: '', confirm: '' };
     this.showPassword = { current: false, new: false, confirm: false };
   }
 

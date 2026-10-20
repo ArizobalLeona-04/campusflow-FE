@@ -13,11 +13,18 @@
       
       <form (ngSubmit)="onLogin()">
         
+        <!-- Inline Error Banner Above Email -->
+        <div *ngIf="errorMessage" 
+             style="background-color: #fdf6ee; color: #9b1c1c; border: 1px solid #f8b4b4; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; margin-bottom: 15px; text-align: center;">
+          {{ errorMessage }}
+        </div>
+
         <div class="input-group">
           <input 
             type="text" 
             name="loginEmail"
             [(ngModel)]="email" 
+            (input)="errorMessage = ''"
             placeholder="Enter Email or Username" 
             required>
         </div>
@@ -28,6 +35,7 @@
               [type]="showPassword ? 'text' : 'password'" 
               name="loginPassword"
               [(ngModel)]="password" 
+              (input)="errorMessage = ''"
               placeholder="Enter Password" 
               required>
             

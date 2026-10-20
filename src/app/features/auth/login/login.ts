@@ -13,31 +13,44 @@ import { CommonModule } from '@angular/common';
 export class LoginComponent {
   email = '';
   password = '';
+  errorMessage = '';
 
   showPassword = false;
 
   constructor(private router: Router) {}
 
   onLogin() {
+    this.errorMessage = '';
+
     if (!this.email.trim() || !this.password.trim()) {
-      alert('Please enter your email and password.');
+      this.errorMessage = 'Please enter your email and password.';
       return;
     }
 
+    const inputEmail = this.email.trim().toLowerCase();
     const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
 
     const foundUser = registeredUsers.find((u: any) => 
-      u.email === this.email && u.password === this.password
+      u.email.toLowerCase() === inputEmail && u.password === this.password
     );
 
     if (foundUser) {
+      // Fallback role detection if missing from older registrations
+      if (!foundUser.role) {
+        const isEmailAdmin = inputEmail.endsWith('@admin.com') || inputEmail.endsWith('@admin.liceo.edu.ph');
+        foundUser.role = isEmailAdmin ? 'admin' : 'user';
+      }
+
       localStorage.setItem('currentUser', JSON.stringify(foundUser));
+      console.log(`Login successful for: ${foundUser.firstName} ${foundUser.lastName} (${foundUser.role})`);
 
-      console.log(`Login successful for: ${foundUser.firstName} ${foundUser.lastName}`);
-
-      this.router.navigate(['/booking']);
+      if (foundUser.role === 'admin') {
+        this.router.navigate(['/dashboard']);
+      } else {
+        this.router.navigate(['/booking']);
+      }
     } else {
-      alert('Invalid email or password. Please check your credentials or register a new account.');
+      this.errorMessage = 'Invalid email or password. Please check your credentials or register a new account.';
     }
   }
 }

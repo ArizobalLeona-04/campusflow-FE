@@ -8,20 +8,32 @@
     </div>
 
     <nav class="nav">
-      <div class="nav-item" routerLink="/booking" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-        Booking <span class="arrow" *ngIf="router.url === '/booking'">></span>
+      <!-- Show Dashboard link ONLY if user is an Admin -->
+      <div class="nav-item" 
+           *ngIf="currentUserRole === 'admin'"
+           routerLink="/dashboard" 
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{exact: true}">
+        Dashboard
+        <span class="arrow" *ngIf="router.url === '/dashboard'">></span>
+      </div>
+
+      <div class="nav-item" 
+           routerLink="/booking" 
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{exact: true}">
+        Booking
+        <span class="arrow" *ngIf="router.url === '/booking'">></span>
       </div>
       
       <div class="nav-item" routerLink="/department" routerLinkActive="active">
-        Subjects <span class="arrow" *ngIf="router.url === '/department'">></span>
+        Subjects 
+        <span class="arrow" *ngIf="router.url === '/department'">></span>
       </div>
 
-      <div class="nav-item" routerLink="/dashboard" routerLinkActive="active">
-        Dashboard <span class="arrow" *ngIf="router.url === '/dashboard'">></span>
-      </div>
-      
       <div class="nav-item" routerLink="/profile" routerLinkActive="active">
-        Profile <span class="arrow" *ngIf="router.url === '/profile'">></span>
+        Profile 
+        <span class="arrow" *ngIf="router.url === '/profile'">></span>
       </div>
     </nav>
 
@@ -33,7 +45,7 @@
     </div>
   </aside>
 
-  <main class="main" *ngIf="user.email">
+  <main class="main" *ngIf="user">
     <h1 class="profile-title">Profile</h1>
 
     <div class="profile-card info-card">
@@ -48,8 +60,40 @@
       </div>
 
       <div class="card-content">
-        <div class="avatar-container">
-          <div class="avatar-circle">{{ user.initials || '??' }}</div>
+        <!-- Interactive Avatar Container -->
+        <div class="avatar-container" style="position: relative; width: 100px; height: 100px;">
+          
+          <!-- Avatar Circle with Original CSS -->
+          <div class="avatar-circle">
+            <img *ngIf="user.profileImage" 
+                 [src]="user.profileImage" 
+                 alt="Profile Picture" 
+                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+            <span *ngIf="!user.profileImage">{{ user.initials || '??' }}</span>
+          </div>
+
+          <!-- Delete Photo Badge (Only appears during EDIT mode if a picture exists) -->
+          <div *ngIf="isEditing && user.profileImage" 
+               (click)="removeProfilePicture()" 
+               title="Remove photo"
+               style="position: absolute; top: 0; left: 0; background: #dc3545; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-size: 0.75rem; font-weight: bold;">
+            ✕
+          </div>
+
+          <!-- Camera Badge Overlay (Maroon background #8b0000) -->
+          <label *ngIf="isEditing" 
+                 for="avatarUpload" 
+                 title="Upload new photo"
+                 style="position: absolute; bottom: 0; right: 0; background: #8b0000; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-size: 0.9rem;">
+            📷
+          </label>
+
+          <!-- Hidden File Input -->
+          <input type="file" 
+                 id="avatarUpload" 
+                 accept="image/*" 
+                 (change)="onFileSelected($event)" 
+                 style="display: none;">
         </div>
         
         <div class="form-container">
@@ -106,30 +150,43 @@
         </div>
 
         <div class="form-container" *ngIf="isVerified">
+          <!-- Current Password (Read-Only with Toggle) -->
           <div class="input-group">
             <label>Current Password</label>
             <div class="password-wrapper">
-              <input [type]="showPassword.current ? 'text' : 'password'" [(ngModel)]="passwordData.current" placeholder="Enter current password">
+              <input [type]="showPassword.current ? 'text' : 'password'" 
+                     [value]="user.password" 
+                     readonly 
+                     tabindex="-1"
+                     class="readonly-password"
+                     style="background-color: #f2f2f2; cursor: not-allowed; opacity: 0.85;"
+                     placeholder="Current password">
               <span class="visibility-toggle" (click)="togglePasswordVisibility('current')">
                 {{ showPassword.current ? '👁️' : '🙈' }}
               </span>
             </div>
           </div>
           
+          <!-- New Password -->
           <div class="input-group">
             <label>New Password</label>
             <div class="password-wrapper">
-              <input [type]="showPassword.new ? 'text' : 'password'" [(ngModel)]="passwordData.new" placeholder="Enter new password">
+              <input [type]="showPassword.new ? 'text' : 'password'" 
+                     [(ngModel)]="passwordData.new" 
+                     placeholder="Enter new password">
               <span class="visibility-toggle" (click)="togglePasswordVisibility('new')">
                 {{ showPassword.new ? '👁️' : '🙈' }}
               </span>
             </div>
           </div>
 
+          <!-- Confirm New Password -->
           <div class="input-group">
             <label>Confirm New Password</label>
             <div class="password-wrapper">
-              <input [type]="showPassword.confirm ? 'text' : 'password'" [(ngModel)]="passwordData.confirm" placeholder="Confirm new password">
+              <input [type]="showPassword.confirm ? 'text' : 'password'" 
+                     [(ngModel)]="passwordData.confirm" 
+                     placeholder="Confirm new password">
               <span class="visibility-toggle" (click)="togglePasswordVisibility('confirm')">
                 {{ showPassword.confirm ? '👁️' : '🙈' }}
               </span>

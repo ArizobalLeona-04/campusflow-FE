@@ -1,4 +1,3 @@
-
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,26 +19,16 @@ export class CreateModal implements OnInit {
 
   selectedType: 'One-Time' | 'Recurring' = 'One-Time';
 
- subjects: any[] = [
-  { id: 1, name: 'Application Development' },
-  { id: 2, name: 'Data Structures and Algorithms' },
-  { id: 3, name: 'Integrative Programming' },
-  { id: 4, name: 'Purposive Communication' },
-  { id: 5, name: 'Social and Professional Issues' }
-];
+  subjects: any[] = [];
 
-staff: any[] = [
-  { id: 1, firstName: 'Leona', lastName: 'Arizobal' },
-  { id: 2, firstName: 'Precious', lastName: 'Fillalan' },
-  { id: 3, firstName: 'Euniece Kyle', lastName: 'Puerto' }
-];
-
-  selectedStaff: string = 'Leona Arizobal';
+  // Holds only the logged in user
+  staff: any[] = [];
+  selectedStaff: string = '';
 
   data: any = {
     period: '',
     department: '',
-    untilDate: '',
+    untilDate: 'Ending of session',
     showDatePicker: false,
     startDate: '',
     customUntilDate: ''
@@ -55,39 +44,64 @@ staff: any[] = [
   ];
 
   ngOnInit() {
-    // Use the sample staff member unless a logged-in user is available.
-    const savedUser = localStorage.getItem('currentUser');
+    // 1. Load subjects from localStorage
+    const savedSubjects = localStorage.getItem('localSubjects') || localStorage.getItem('departments');
+    if (savedSubjects) {
+      try {
+        const parsed = JSON.parse(savedSubjects);
+        if (Array.isArray(parsed)) {
+          this.subjects = parsed;
+        }
+      } catch (e) {
+        this.subjects = [];
+      }
+    }
 
+    // 2. Load ONLY the logged-in user into the staff dropdown
+    const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
       try {
         const loggedInUser = JSON.parse(savedUser);
-
-        if (loggedInUser.firstName && loggedInUser.lastName) {
-          this.selectedStaff =
-            `${loggedInUser.firstName} ${loggedInUser.lastName}`;
+        if (loggedInUser.firstName || loggedInUser.lastName) {
+          const userObj = {
+            firstName: loggedInUser.firstName || '',
+            lastName: loggedInUser.lastName || ''
+          };
+          this.staff = [userObj];
+          this.selectedStaff = `${userObj.firstName} ${userObj.lastName}`.trim();
+        } else {
+          this.setDefaultUser();
         }
       } catch {
-        this.selectedStaff = 'Leona Arizobal';
+        this.setDefaultUser();
       }
+    } else {
+      this.setDefaultUser();
     }
   }
 
+  private setDefaultUser() {
+    const fallbackUser = { firstName: 'Euniece Kyle', lastName: 'Puerto' };
+    this.staff = [fallbackUser];
+    this.selectedStaff = `${fallbackUser.firstName} ${fallbackUser.lastName}`;
+  }
+
   onUntilChange() {
-    this.data.showDatePicker =
-      this.data.untilDate === 'Pick Date';
+    this.data.showDatePicker = this.data.untilDate === 'Pick Date';
   }
 
   onSubmit() {
     let finalUntilDate = null;
 
     if (this.selectedType === 'Recurring') {
-      finalUntilDate =
-        this.data.customUntilDate || this.data.untilDate;
+      finalUntilDate = this.data.showDatePicker
+        ? this.data.customUntilDate
+        : (this.data.untilDate || 'Ending of session');
     }
 
     const bookingPayload = {
       room_name: this.roomName,
-      booking_date: this.selectedDate,
+      booking_date: this.data.startDate || this.selectedDate,
       period: this.data.period,
       subject: this.data.department,
       booked_by: this.selectedStaff,
@@ -98,11 +112,6 @@ staff: any[] = [
 
     console.log('Temporary booking data:', bookingPayload);
 
-    alert(
-      'Demo mode: Your booking details were prepared, but not saved. The backend is not connected.'
-    );
-
-    // Send the sample booking to the parent component for UI testing.
     this.create.emit(bookingPayload);
     this.close.emit();
   }

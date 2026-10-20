@@ -1,46 +1,65 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RoomService {
-private bookingsSubject = new BehaviorSubject<any[]>([]);
-public bookings$ = this.bookingsSubject.asObservable();
+  private bookingsSubject = new BehaviorSubject<any[]>([]);
+  public bookings$: Observable<any[]> = this.bookingsSubject.asObservable();
 
-get allBookingsValue() {
-  return this.bookingsSubject.value;
-}
-
-  constructor(private http: HttpClient) {
+  constructor() {
+    // 1. Initial load of bookings from shared localStorage
     this.loadAllBookings();
-  }
 
-loadAllBookings() {
-    this.http.get<any[]>('http://localhost:3000/api/bookings').subscribe({
-      next: (data) => {
-        const sortedData = data.sort((a, b) => {
-          const dateA = a.booking_date.split('T')[0];
-          const dateB = b.booking_date.split('T')[0];
-          return dateA.localeCompare(dateB);
-        });
-        this.bookingsSubject.next(sortedData);
-      },
-      error: (err) => console.error('Failed to load bookings from API', err)
+    // 2. Real-time multi-tab listener: syncs bookings across different tabs/users automatically
+    window.addEventListener('storage', (event: StorageEvent) => {
+      if (event.key === 'localBookings') {
+        this.loadAllBookings();
+      }
     });
   }
 
-  getCurrentUser() {
-    const user = localStorage.getItem('currentUser');
-    return user ? JSON.parse(user) : { firstName: 'Guest', lastName: '' };
+  get allBookingsValue(): any[] {
+    return this.bookingsSubject.value;
   }
 
-clearBookings() {
-  return this.http.delete('http://localhost:3000/api/bookings/clear-today');
-}
+  getCurrentUser(): any {
+    const user = localStorage.getItem('currentUser');
+    return user ? JSON.parse(user) : null;
+  }
 
-  updateBookings(bookings: any[]) {
-    this.bookingsSubject.next(bookings);
+  loadAllBookings(): void {
+    const saved = localStorage.getItem('localBookings');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        this.bookingsSubject.next(parsed);
+      } catch (e) {
+        this.bookingsSubject.next([]);
+      }
+    } else {
+      this.bookingsSubject.next([]);
+    }
+  }
+
+  addBooking(newBooking: any): void {
+    const current = this.bookingsSubject.value;
+    const updated = [...current, newBooking];
+    
+    // Persist to shared localStorage key for all accounts
+    localStorage.setItem('localBookings', JSON.stringify(updated));
+    this.bookingsSubject.next(updated);
+  }
+
+  updateBookings(updatedBookings: any[]): void {
+    localStorage.setItem('localBookings', JSON.stringify(updatedBookings));
+    this.bookingsSubject.next(updatedBookings);
+  }
+
+  clearBookings(): Observable<any> {
+    localStorage.removeItem('localBookings');
+    this.bookingsSubject.next([]);
+    return of(true);
   }
 }

@@ -12,55 +12,77 @@ import { CommonModule } from '@angular/common';
 })
 export class RegisterComponent {
   userData = {
-    username: '',
+    firstName: '',
+    lastName: '',
     email: '',
-    password: '',
-    confirmPassword: ''
+    password: ''
   };
+
+  errorMessage = '';
+  showPassword = false;
 
   constructor(private router: Router) {}
 
   onCreateAccount() {
-    if (!this.userData.username.trim() || !this.userData.password || !this.userData.email) {
-      alert('Please fill in all fields.');
+    this.errorMessage = '';
+
+    const first = this.userData.firstName.trim();
+    const last = this.userData.lastName.trim();
+    const email = this.userData.email.trim().toLowerCase();
+    const pwd = this.userData.password;
+
+    if (!first || !last || !email || !pwd) {
+      this.errorMessage = 'Please fill in all fields.';
       return;
     }
 
-    if (this.userData.password !== this.userData.confirmPassword) {
-      alert('Passwords do not match!');
+    if (pwd.length < 6) {
+      this.errorMessage = 'Password must be at least 6 characters long.';
       return;
     }
-
-    const fullName = this.userData.username.trim();
-    const nameParts = fullName.split(/\s+/);
-    
-    const firstName = nameParts[0];
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-    
-    const initials = (firstName[0] + (lastName ? lastName[0] : '')).toUpperCase();
-
-    const newUser = {
-      firstName: firstName,
-      lastName: lastName,
-      email: this.userData.email,
-      password: this.userData.password,
-      initials: initials
-    };
 
     const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
     
-    const emailExists = existingUsers.some((u: any) => u.email === this.userData.email);
+    const emailExists = existingUsers.some(
+      (u: any) => u.email.toLowerCase() === email
+    );
+
     if (emailExists) {
-      alert('An account with this email already exists!');
+      this.errorMessage = 'An account with this email already exists!';
       return;
     }
 
+    // Role Mapping Logic:
+    // Admin Side: @admin.com or @admin.liceo.edu.ph
+    // User Side: @liceo.edu.ph or any standard user domain
+    const isAdmin = email.endsWith('@admin.com') || email.endsWith('@admin.liceo.edu.ph');
+    const userRole = isAdmin ? 'admin' : 'user';
+
+    const firstInitial = first.charAt(0);
+    const lastInitial = last.charAt(0);
+    const initials = (firstInitial + lastInitial).toUpperCase();
+
+    const newUser = {
+      id: Date.now(),
+      firstName: first,
+      lastName: last,
+      email: email,
+      password: pwd,
+      role: userRole,
+      initials: initials
+    };
+
     existingUsers.push(newUser);
     localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
+    localStorage.setItem('currentUser', JSON.stringify(newUser));
 
-    console.log('Account created for:', firstName, lastName);
-    alert('Account created successfully! You can now log in.');
+    console.log(`Account created for ${first} ${last} (${userRole})`);
 
-    this.router.navigate(['/login']);
+    // Route Admin to Dashboard, Regular User directly to Booking
+    if (userRole === 'admin') {
+      this.router.navigate(['/dashboard']);
+    } else {
+      this.router.navigate(['/booking']);
+    }
   }
 }

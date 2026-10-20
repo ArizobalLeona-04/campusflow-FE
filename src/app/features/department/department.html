@@ -1,4 +1,4 @@
-<div class="layout">
+<div class="layout" style="font-family: Arial, Helvetica, sans-serif;">
   <aside class="sidebar">
     <div class="brand">
       <div class="logo-container">
@@ -9,6 +9,15 @@
 
     <nav class="nav">
       <div class="nav-item" 
+           *ngIf="currentUserRole === 'admin'"
+           routerLink="/dashboard" 
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{exact: true}">
+        Dashboard
+        <span class="arrow" *ngIf="router.url === '/dashboard'">></span>
+      </div>
+
+      <div class="nav-item" 
            routerLink="/booking" 
            routerLinkActive="active"
            [routerLinkActiveOptions]="{exact: true}">
@@ -16,29 +25,18 @@
         <span class="arrow" *ngIf="router.url === '/booking'">></span>
       </div>
       
-      <div class="nav-item" 
-           routerLink="/department" 
-           routerLinkActive="active">
+      <div class="nav-item" routerLink="/department" routerLinkActive="active">
         Subjects 
         <span class="arrow" *ngIf="router.url === '/department'">></span>
       </div>
 
-      <div class="nav-item" 
-           routerLink="/dashboard" 
-           routerLinkActive="active">
-        Dashboard
-        <span class="arrow" *ngIf="router.url === '/dashboard'">></span>
-      </div>
-      
-      <div class="nav-item" 
-           routerLink="/profile" 
-           routerLinkActive="active">
+      <div class="nav-item" routerLink="/profile" routerLinkActive="active">
         Profile 
         <span class="arrow" *ngIf="router.url === '/profile'">></span>
       </div>
     </nav>
 
-    <div class="sign-out" (click)="onSignOut()" style="cursor: pointer;">
+    <div class="sign-out" (click)="onSignOut()">
       <div class="sign-out-content">
         <span class="exit-icon">🚪</span>
         <span class="sign-out-text">Sign Out</span>
@@ -46,52 +44,63 @@
     </div>
   </aside>
 
-  <main class="main">
-    <h1 class="dept-title">Subjects</h1>
+  <main class="main" style="background-color: #fdf6ee; min-height: 100vh; padding: 40px; box-sizing: border-box; font-family: Arial, Helvetica, sans-serif;">
+    <h1 class="page-title" style="color: #e59300; font-family: Arial, Helvetica, sans-serif; font-size: 38px; font-weight: 700; margin: 0 0 25px 0; letter-spacing: -0.5px;">Subjects</h1>
 
-    <div class="create-dept-container">
-      <div class="create-dept-card">
-        <button class="add-btn" (click)="toggleAddBox()">
-          <span class="plus">{{ isAdding ? '−' : '+' }}</span>
-        </button>
-        <span class="create-label">{{ isAdding ? 'Close Input' : 'Create Subject' }}</span>
-        
-        <input 
-          *ngIf="isAdding"
-          type="text" 
-          class="dept-input" 
-          placeholder="Subject name"
-          [(ngModel)]="newSubjectName"
-          (keyup.enter)="addSubject()"
-          autofocus
-        >
-        <button *ngIf="isAdding" class="save-inline-btn" (click)="addSubject()">Save</button>
-      </div>
+    <!-- Create Subject Rounded White Card -->
+    <div class="create-subjects-bar" style="background-color: #ffffff; border: 1px solid #757575; border-radius: 12px; padding: 12px 20px; display: flex; align-items: center; gap: 15px; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <!-- Click + to open the subject input field -->
+      <button class="add-btn" (click)="toggleAddInput()" style="background-color: #f3a623; color: #ffffff; border: none; border-radius: 8px; width: 34px; height: 34px; font-size: 22px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; font-family: Arial, Helvetica, sans-serif;">+</button>
+      <span class="create-label" style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-weight: 700; color: #1a1a1a;">Create Subjects</span>
+      
+      <!-- Hidden by default until + is clicked -->
+      <input *ngIf="isAdding" 
+             type="text" 
+             class="subject-input" 
+             placeholder="Subject name" 
+             [(ngModel)]="newSubjectName" 
+             (keyup.enter)="saveSubject()"
+             style="background-color: #e0e0e0; border: none; border-radius: 6px; padding: 8px 12px; font-size: 13px; font-family: Arial, Helvetica, sans-serif; color: #333; outline: none; width: 160px;">
     </div>
 
-    <div class="dept-table-wrapper">
-      <table class="dept-table">
+    <!-- Table Container Card -->
+    <div class="table-card" style="border: 1px solid #1a1a1a; border-radius: 2px; background-color: #ffffff; overflow: hidden;">
+      <table class="departments-table" style="width: 100%; border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
         <thead>
-          <tr>
-            <th class="col-name">Name</th>
-            <th class="col-actions">Actions</th>
+          <tr style="background-color: #8c0303; color: #ffffff;">
+            <th class="col-name" style="text-align: left; padding: 12px 16px; font-size: 14px; font-weight: 700; width: 85%; font-family: Arial, Helvetica, sans-serif;">Name</th>
+            <th class="col-actions" style="text-align: right; padding: 12px 16px; font-size: 14px; font-weight: 700; width: 15%; font-family: Arial, Helvetica, sans-serif;">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let subject of subjects">
-            <td class="dept-name-cell">{{ subject.name }}</td>
-            <td class="dept-actions-cell">
-              <button class="action-btn edit" (click)="editSubject(subject)">
-                <span class="icon">✏️</span>
-              </button>
-              <button class="action-btn delete" (click)="deleteSubject(subject.id)">
-                <span class="icon">❌</span>
-              </button>
+          <!-- Empty State Row -->
+          <tr *ngIf="subjects.length === 0">
+            <td colspan="2" style="text-align: center; color: #666666; padding: 22px; font-size: 13px; border-bottom: 1px solid #1a1a1a; font-family: Arial, Helvetica, sans-serif;">
+              No subjects found. Add a subject above to populate the booking list.
             </td>
           </tr>
-          <tr *ngIf="subjects.length === 0">
-            <td colspan="2" style="text-align: center; padding: 20px; color: #888;">
-              No subjects found. Add your first subject above!
+
+          <!-- Dynamic Subject Rows -->
+          <tr *ngFor="let sub of subjects" style="border-bottom: 1px solid #1a1a1a;">
+            <td class="col-name" style="padding: 12px 16px; font-size: 13px; font-weight: 700; color: #222222; text-align: left; font-family: Arial, Helvetica, sans-serif;">
+              <span *ngIf="editingSubjectId !== sub.id">{{ sub.name }}</span>
+              <input *ngIf="editingSubjectId === sub.id" 
+                     type="text" 
+                     class="edit-input" 
+                     [(ngModel)]="editingName" 
+                     (keyup.enter)="saveEdit(sub.id)" 
+                     (keyup.escape)="cancelEdit()"
+                     style="padding: 4px 8px; border-radius: 4px; border: 1px solid #999; font-size: 13px; font-family: Arial, Helvetica, sans-serif;">
+            </td>
+            <td class="col-actions" style="padding: 12px 16px; text-align: right; white-space: nowrap; font-family: Arial, Helvetica, sans-serif;">
+              <ng-container *ngIf="editingSubjectId !== sub.id">
+                <span class="action-icon edit-icon" (click)="startEdit(sub)" title="Edit" style="cursor: pointer; font-size: 14px; margin-right: 8px; user-select: none;">✏️</span>
+                <span class="action-icon delete-icon" (click)="deleteSubject(sub.id)" title="Delete" style="cursor: pointer; font-size: 14px; color: #d30000; font-weight: bold; user-select: none;">❌</span>
+              </ng-container>
+              <ng-container *ngIf="editingSubjectId === sub.id">
+                <button class="btn-save-inline" (click)="saveEdit(sub.id)" style="background: #28a745; color: #fff; border: none; padding: 3px 8px; border-radius: 3px; font-size: 12px; margin-right: 4px; cursor: pointer; font-family: Arial, Helvetica, sans-serif;">Save</button>
+                <button class="btn-cancel-inline" (click)="cancelEdit()" style="background: #6c757d; color: #fff; border: none; padding: 3px 8px; border-radius: 3px; font-size: 12px; cursor: pointer; font-family: Arial, Helvetica, sans-serif;">Cancel</button>
+              </ng-container>
             </td>
           </tr>
         </tbody>

@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-department',
@@ -12,84 +11,102 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./department.scss']
 })
 export class DepartmentComponent implements OnInit {
-  newSubjectName: string = '';
   subjects: any[] = [];
-  isAdding: boolean = false;
-  
-  private apiUrl = 'http://localhost:3000/api/subjects';
+  newSubjectName: string = '';
+  isAdding: boolean = false; // Controls visibility of the "Subject name" input field
+  editingSubjectId: number | null = null;
+  editingName: string = '';
+  currentUserRole: string = 'user';
 
-  constructor(public router: Router, private http: HttpClient) {}
+  constructor(public router: Router) {}
 
-  ngOnInit() {
-    this.fetchSubjects();
+ ngOnInit() {
+  const savedUser = localStorage.getItem('currentUser');
+  if (savedUser) {
+    try {
+      const user = JSON.parse(savedUser);
+      const email = user.email?.toLowerCase() || '';
+      const isAdminDomain = email.endsWith('@admin.com') || email.endsWith('@admin.liceo.edu.ph');
+
+      this.currentUserRole = user.role || (isAdminDomain ? 'admin' : 'user');
+    } catch {
+      this.currentUserRole = 'user';
+    }
   }
 
-  fetchSubjects() {
-    this.http.get<any[]>(this.apiUrl).subscribe({
-      next: (data) => {
-        this.subjects = data.sort((a, b) => a.name.localeCompare(b.name));
-      },
-      error: (err) => {
-        console.error('Error fetching subjects:', err);
+  this.loadSubjects();
+}
+  loadSubjects() {
+    const saved = localStorage.getItem('localSubjects');
+    if (saved) {
+      try {
+        this.subjects = JSON.parse(saved);
+      } catch {
+        this.subjects = [];
       }
-    });
-  }
-
-  addSubject() {
-    if (this.newSubjectName.trim()) {
-      const payload = { name: this.newSubjectName.trim() };
-      this.http.post(this.apiUrl, payload).subscribe({
-        next: () => {
-          this.fetchSubjects();
-          this.newSubjectName = '';
-          this.isAdding = false;
-        },
-        error: (err) => {
-          console.error('Add failed:', err);
-          alert('Failed to add subject. Is the backend running?');
-        }
-      });
+    } else {
+      this.subjects = [];
+      localStorage.setItem('localSubjects', JSON.stringify(this.subjects));
     }
   }
 
-  deleteSubject(id: number) {
-    if (confirm('Are you sure you want to delete this subject?')) {
-      this.http.delete(`${this.apiUrl}/${id}`).subscribe({
-        next: () => {
-          this.fetchSubjects();
-        },
-        error: (err) => {
-          console.error('Delete failed:', err);
-          alert('Could not delete subject.');
-        }
-      });
-    }
-  }
-
-  editSubject(subject: any) {
-    const updatedName = prompt('Edit Subject Name:', subject.name);
-    if (updatedName && updatedName.trim() && updatedName !== subject.name) {
-      const payload = { name: updatedName.trim() };
-      this.http.patch(`${this.apiUrl}/${subject.id}`, payload).subscribe({
-        next: () => {
-          this.fetchSubjects();
-        },
-        error: (err) => {
-          console.error('Update failed:', err);
-          alert('Failed to update subject.');
-        }
-      });
-    }
-  }
-
-  toggleAddBox() {
-    this.isAdding = !this.isAdding;
-    if (!this.isAdding) {
+  toggleAddInput() {
+    // If input is already visible and has text, save it on button click
+    if (this.isAdding && this.newSubjectName.trim()) {
+      this.saveSubject();
+    } else {
+      // Otherwise toggle the input box open/closed
+      this.isAdding = !this.isAdding;
       this.newSubjectName = '';
     }
   }
 
+  saveSubject() {
+    if (!this.newSubjectName.trim()) {
+      alert('Please enter a subject name.');
+      return;
+    }
+
+    const newSub = {
+      id: Date.now(),
+      name: this.newSubjectName.trim()
+    };
+
+    this.subjects.push(newSub);
+    localStorage.setItem('localSubjects', JSON.stringify(this.subjects));
+    
+    // Reset and hide input after saving
+    this.newSubjectName = '';
+    this.isAdding = false;
+  }
+
+  startEdit(subject: any) {
+    this.editingSubjectId = subject.id;
+    this.editingName = subject.name;
+  }
+
+  saveEdit(id: number) {
+    if (!this.editingName.trim()) return;
+    const sub = this.subjects.find(s => s.id === id);
+    if (sub) {
+      sub.name = this.editingName.trim();
+      localStorage.setItem('localSubjects', JSON.stringify(this.subjects));
+    }
+    this.editingSubjectId = null;
+  }
+
+  cancelEdit() {
+    this.editingSubjectId = null;
+    this.editingName = '';
+  }
+
+  deleteSubject(id: number) {
+    this.subjects = this.subjects.filter(s => s.id !== id);
+    localStorage.setItem('localSubjects', JSON.stringify(this.subjects));
+  }
+
   onSignOut() {
+    localStorage.removeItem('currentUser');
     this.router.navigate(['/login']);
   }
 }

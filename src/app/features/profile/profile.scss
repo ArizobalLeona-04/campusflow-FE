@@ -25,22 +25,14 @@ $red-banner: #8b0000;
 $drawer-bg: #fffcf8;
 $text-maroon: #5D1A1A;
 
-.layout {
-  // FIXED: Changed width to 100% to allow sidebar and main to coexist properly
-  width: 100%; 
-  flex-shrink: 0; // CRITICAL: Stops the sidebar from shrinking
-  height: 100vh;
-  display: flex; 
-  overflow: hidden; // Prevents double scrollbars
-}
+.layout { display: flex; height: 100vh; font-family: sans-serif; background: #fdf6ee; }
 
 .sidebar {
   width: 240px; 
-  background: $maroon !important; 
+  background: $maroon !important;
   color: white; 
   display: flex; 
   flex-direction: column;
-  flex-shrink: 0;
   
   .brand {
     padding: 20px; 
@@ -67,7 +59,6 @@ $text-maroon: #5D1A1A;
       align-items: center;
       cursor: pointer;
       transition: all 0.2s ease;
-      text-decoration: none;
       background-color: $maroon !important; 
       color: rgba(255, 255, 255, 0.8) !important;
       
@@ -81,6 +72,7 @@ $text-maroon: #5D1A1A;
         background-color: rgba(255, 255, 255, 0.1) !important; 
         color: white !important;
       }
+      
       .arrow { font-size: 1.1rem; }
     }
   }
@@ -91,21 +83,17 @@ $text-maroon: #5D1A1A;
     background-color: $maroon !important;
     border-top: 1px solid rgba(255,255,255,0.1);
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
 
     &:hover { 
       background-color: color.adjust($maroon, $lightness: -5%) !important; 
     }
   }
 }
-
 .main { 
   flex-grow: 1;   // CRITICAL: Tells the main content to take all remaining space
   padding: 40px; 
   overflow-y: auto; 
-  background: #fffcf8;
+  background: #fdf6ee;
 }
 
 .profile-title {

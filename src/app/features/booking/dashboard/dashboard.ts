@@ -2,7 +2,6 @@ import { Component, OnInit, inject, ViewChild, ChangeDetectorRef } from '@angula
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RoomService } from '../../services/room.service';
-import { HttpClient } from '@angular/common/http';
 import { BaseChartDirective } from 'ng2-charts';
 import { Chart, registerables, ChartConfiguration, ChartOptions } from 'chart.js';
 
@@ -32,7 +31,6 @@ export class DashboardComponent implements OnInit {
 
   private allSystemBookings: any[] = [];
   private roomService = inject(RoomService);
-  private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
 
   private buildingColorMap: { [key: string]: string } = {
@@ -72,6 +70,29 @@ export class DashboardComponent implements OnInit {
   constructor(public router: Router) {}
 
   ngOnInit(): void {
+    // 1. Role Check
+    const savedUser = localStorage.getItem('currentUser');
+    if (!savedUser) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    try {
+      const user = JSON.parse(savedUser);
+      const email = user?.email?.toLowerCase() || '';
+      const isAdminDomain = email.endsWith('@admin.com') || email.endsWith('@admin.liceo.edu.ph');
+      const role = user?.role || (isAdminDomain ? 'admin' : 'user');
+
+      if (role !== 'admin') {
+        this.router.navigate(['/booking']);
+        return;
+      }
+    } catch (e) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    // 2. Safe Data Subscription
     this.roomService.bookings$.subscribe((allBookings: any[]) => {
       if (allBookings) {
         this.allSystemBookings = allBookings;
@@ -80,28 +101,30 @@ export class DashboardComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+
     this.roomService.loadAllBookings();
   }
 
-  
   updateDashboardStats(allBookings: any[]): void {
     const today = this.formatDate(new Date());
 
     this.todaysBookings = allBookings.filter(b => {
-      if (!b.booking_date) return false;
-      const bDate = b.booking_date.includes('T') ? b.booking_date.split('T')[0] : b.booking_date;
+      if (!b || !b.booking_date) return false;
+      const bDate = typeof b.booking_date === 'string' && b.booking_date.includes('T') 
+        ? b.booking_date.split('T')[0] 
+        : b.booking_date;
       return bDate === today;
     });
 
     this.activeBookings = this.todaysBookings.length;
-    
-    this.availableNow = this.maxCapacity - this.activeBookings;
+    this.availableNow = Math.max(0, this.maxCapacity - this.activeBookings);
     this.totalRooms = this.maxCapacity; 
   }
 
   checkConflict(roomName: string, date: string, period: string): boolean {
     return this.allSystemBookings.some(b => 
       b.room_name === roomName && 
+      b.booking_date &&
       b.booking_date.includes(date) && 
       b.period === period
     );
@@ -122,8 +145,10 @@ export class DashboardComponent implements OnInit {
   updateCharts(bookingsToUse: any[]): void {
     const dateMap: { [key: string]: number } = {};
     bookingsToUse.forEach(b => {
-      const d = b.booking_date.split('T')[0];
-      dateMap[d] = (dateMap[d] || 0) + 1;
+      if (b && b.booking_date) {
+        const d = typeof b.booking_date === 'string' ? b.booking_date.split('T')[0] : '';
+        if (d) dateMap[d] = (dateMap[d] || 0) + 1;
+      }
     });
 
     const sortedDates = Object.keys(dateMap).sort();
@@ -134,7 +159,7 @@ export class DashboardComponent implements OnInit {
     this.barChartData.datasets = this.buildings.map(bName => ({
       label: bName,
       data: sortedDates.map(date =>
-        bookingsToUse.filter(b => b.booking_date.includes(date) && b.room_name.startsWith(bName)).length
+        bookingsToUse.filter(b => b.booking_date && b.booking_date.includes(date) && b.room_name?.startsWith(bName)).length
       ),
       backgroundColor: this.buildingColorMap[bName] || '#ccc',
       stack: 'buildingStack'
@@ -153,20 +178,11 @@ export class DashboardComponent implements OnInit {
     this.isListVisible = !this.isListVisible;
   }
 
-clearAllBookings(): void {
-  if (confirm('Are you sure you want to clear all booking data for today? This action cannot be undone.')) {
-    this.roomService.clearBookings().subscribe({
-      next: () => {
-        alert('All bookings have been cleared.');
-        this.roomService.loadAllBookings();
-      },
-      error: (err) => {
-        console.error('Failed to clear bookings:', err);
-        alert('Could not clear bookings. Check your backend connection.');
-      }
-    });
+  clearAllBookings(): void {
+    if (confirm('Are you sure you want to clear all booking data for today?')) {
+      this.roomService.clearBookings();
+    }
   }
-}
 
   onSignOut(): void {
     localStorage.removeItem('currentUser');
