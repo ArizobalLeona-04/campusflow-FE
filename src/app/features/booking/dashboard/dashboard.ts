@@ -16,10 +16,10 @@ Chart.register(...registerables);
 })
 export class DashboardComponent implements OnInit {
   // --- Dashboard Stats ---
-  maxCapacity: number = 20; 
-  totalRooms: number = 20;
+  maxCapacity: number = 80; 
+  totalRooms: number = 80;
   activeBookings: number = 0;
-  availableNow: number = 20;
+  availableNow: number = 80;
 
   @ViewChild(BaseChartDirective) chart: any;
 
