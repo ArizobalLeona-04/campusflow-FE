@@ -115,8 +115,19 @@ export class CreateModal implements OnInit {
       status: 'Confirmed'
     };
 
-    this.http.post('http://localhost:5000/api/bookings', bookingPayload).subscribe({
+this.http.post('http://localhost:5000/api/bookings', bookingPayload).subscribe({
       next: (response: any) => {
+        console.log('Booking saved successfully!');
+
+        this.http.post('http://localhost:5000/api/calendar/sync-calendar', bookingPayload).subscribe({
+          next: (syncRes: any) => {
+            console.log('Calendar sync response:', syncRes);
+          },
+          error: (syncErr) => {
+            console.error('Calendar sync failed:', syncErr);
+          }
+        });
+
         this.create.emit(response.booking || bookingPayload);
         this.close.emit();
       },
@@ -125,7 +136,6 @@ export class CreateModal implements OnInit {
         this.errorMessage = typeof backendError === 'string' 
           ? backendError 
           : 'Conflict detected: Room is already booked for this period.';
-          
         this.cdr.detectChanges();
       }
     });
