@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-create-modal',
@@ -20,8 +21,8 @@ export class CreateModal implements OnInit {
   selectedType: 'One-Time' | 'Recurring' = 'One-Time';
 
   subjects: any[] = [];
+  errorMessage: string = '';
 
-  // Holds only the logged in user
   staff: any[] = [];
   selectedStaff: string = '';
 
@@ -43,8 +44,12 @@ export class CreateModal implements OnInit {
     { label: 'Period 6', time: '3:30pm - 5:00pm' }
   ];
 
+  constructor(
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef
+  ) {}
+  
   ngOnInit() {
-    // 1. Load subjects from localStorage
     const savedSubjects = localStorage.getItem('localSubjects') || localStorage.getItem('departments');
     if (savedSubjects) {
       try {
@@ -57,7 +62,6 @@ export class CreateModal implements OnInit {
       }
     }
 
-    // 2. Load ONLY the logged-in user into the staff dropdown
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
       try {
@@ -91,6 +95,7 @@ export class CreateModal implements OnInit {
   }
 
   onSubmit() {
+    this.errorMessage = ''; // Clear previous error
     let finalUntilDate = null;
 
     if (this.selectedType === 'Recurring') {
@@ -110,10 +115,20 @@ export class CreateModal implements OnInit {
       status: 'Confirmed'
     };
 
-    console.log('Temporary booking data:', bookingPayload);
-
-    this.create.emit(bookingPayload);
-    this.close.emit();
+    this.http.post('http://localhost:5000/api/bookings', bookingPayload).subscribe({
+      next: (response: any) => {
+        this.create.emit(response.booking || bookingPayload);
+        this.close.emit();
+      },
+      error: (err) => {
+        const backendError = err.error?.error || err.error?.message || err.error;
+        this.errorMessage = typeof backendError === 'string' 
+          ? backendError 
+          : 'Conflict detected: Room is already booked for this period.';
+          
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   closeModal() {

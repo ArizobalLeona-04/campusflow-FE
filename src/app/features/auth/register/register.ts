@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../auth'; 
 
 @Component({
   selector: 'app-register',
@@ -21,7 +22,7 @@ export class RegisterComponent {
   errorMessage = '';
   showPassword = false;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   onCreateAccount() {
     this.errorMessage = '';
@@ -41,20 +42,6 @@ export class RegisterComponent {
       return;
     }
 
-    const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    
-    const emailExists = existingUsers.some(
-      (u: any) => u.email.toLowerCase() === email
-    );
-
-    if (emailExists) {
-      this.errorMessage = 'An account with this email already exists!';
-      return;
-    }
-
-    // Role Mapping Logic:
-    // Admin Side: @admin.com or @admin.liceo.edu.ph
-    // User Side: @liceo.edu.ph or any standard user domain
     const isAdmin = email.endsWith('@admin.com') || email.endsWith('@admin.liceo.edu.ph');
     const userRole = isAdmin ? 'admin' : 'user';
 
@@ -62,27 +49,36 @@ export class RegisterComponent {
     const lastInitial = last.charAt(0);
     const initials = (firstInitial + lastInitial).toUpperCase();
 
-    const newUser = {
-      id: Date.now(),
-      firstName: first,
-      lastName: last,
+    // Generate a unique username automatically
+    const generatedUsername = `${first.toLowerCase()}_${last.toLowerCase()}_${Math.floor(Math.random() * 1000)}`;
+
+    const payload = {
+      username: generatedUsername,
       email: email,
       password: pwd,
+      firstName: first,
+      lastName: last,
       role: userRole,
       initials: initials
     };
 
-    existingUsers.push(newUser);
-    localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
+    this.authService.register(payload).subscribe({
+      next: (response) => {
+        console.log('Account registered in MongoDB successfully:', response);
+        
+        localStorage.setItem('currentUser', JSON.stringify({ ...payload, id: response.userId }));
 
-    console.log(`Account created for ${first} ${last} (${userRole})`);
-
-    // Route Admin to Dashboard, Regular User directly to Booking
-    if (userRole === 'admin') {
-      this.router.navigate(['/dashboard']);
-    } else {
-      this.router.navigate(['/booking']);
-    }
+        // Route Admin to Dashboard, Regular User directly to Booking
+        if (userRole === 'admin') {
+          this.router.navigate(['/dashboard']);
+        } else {
+          this.router.navigate(['/booking']);
+        }
+      },
+      error: (err) => {
+        console.error('Registration failed:', err);
+        this.errorMessage = err.error?.error || 'An account with this email already exists!';
+      }
+    });
   }
 }

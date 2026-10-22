@@ -57,7 +57,6 @@ export class BookingComponent implements OnInit {
     const user = this.roomService.getCurrentUser();
     this.currentUserDisplayName = `${user?.firstName || 'Guest'} ${user?.lastName || ''}`;
 
-    // Role check logic including @admin.liceo.edu.ph
     const email = user?.email?.toLowerCase() || '';
     const isAdminDomain = email.endsWith('@admin.com') || email.endsWith('@admin.liceo.edu.ph');
     
@@ -73,14 +72,12 @@ export class BookingComponent implements OnInit {
     return this.currentUserRole === 'admin';
   }
 
-  // True if the logged-in user is the one who made the selected booking
   get isBookingOwner(): boolean {
     const bookedBy = (this.selectedBooking?.booked_by || '').trim().toLowerCase();
     const me = (this.currentUserDisplayName || '').trim().toLowerCase();
     return !!bookedBy && bookedBy === me;
   }
 
-  // Only the booking's owner or an admin can cancel it
   get canCancel(): boolean {
     return this.isAdmin || this.isBookingOwner;
   }
@@ -94,30 +91,17 @@ export class BookingComponent implements OnInit {
       return;
     }
 
-    const selectedDate = new Date(rawDate).toISOString().split('T')[0];
-    const selectedRoom = formValue.room;
-    const selectedPeriod = formValue.period;
-
-    const isOccupied = this.roomService.allBookingsValue.some((b: any) => {
-      const dbDate = b.booking_date.split('T')[0];
-      return dbDate === selectedDate && 
-             b.room_name === selectedRoom && 
-             b.period === selectedPeriod;
-    });
-
-    if (isOccupied) {
-      alert(`CONFLICT: ${selectedRoom} is already booked for ${selectedPeriod} on ${selectedDate}.`);
-      return;
-    }
-
-    this.http.post('http://localhost:3000/api/bookings', formValue).subscribe({
-      next: () => {
-        alert('Booking saved successfully!');
+    // Connects to your backend to enforce double-booking prevention
+    this.http.post('http://localhost:5000/api/bookings', formValue).subscribe({
+      next: (response: any) => {
+        alert(response.message || 'Booking saved successfully!');
         this.roomService.loadAllBookings();
         this.isModalOpen = false;
+        this.bookingForm.reset();
       },
-      error: () => {
-        this.handleNewBooking(formValue);
+      error: (err) => {
+        const errorMsg = err.error?.error || 'Conflict detected: Room is already booked for this period.';
+        alert(errorMsg);
       }
     });
   }
@@ -131,24 +115,34 @@ export class BookingComponent implements OnInit {
   }
 
   getBooking(room: string, periodLabel: string) {
-    const formattedDate = this.dateForInput;
+    const formattedDate = this.dateForInput; // 'YYYY-MM-DD'
+    const currentDateTime = new Date(formattedDate).getTime();
 
     return this.savedBookings.find(b => {
-      if (!b || !b.booking_date) return false;
+      if (!b || !b.room_name || !b.period) return false;
       
-      let dbDateOnly = '';
-      if (typeof b.booking_date === 'string') {
-        dbDateOnly = b.booking_date.split('T')[0];
-      } else {
-        const dateObj = new Date(b.booking_date);
-        dbDateOnly = dateObj.getFullYear() + '-' + 
-                     String(dateObj.getMonth() + 1).padStart(2, '0') + '-' + 
-                     String(dateObj.getDate()).padStart(2, '0');
+      const matchesRoomAndPeriod = (b.room_name === room && b.period === periodLabel);
+      if (!matchesRoomAndPeriod) return false;
+
+      // Handle One-Time Bookings (Exact date match)
+      if (!b.booking_type || b.booking_type.toLowerCase() === 'one-time' || !b.until_date) {
+        if (!b.booking_date) return false;
+        let dbDateOnly = typeof b.booking_date === 'string' ? b.booking_date.split('T')[0] : new Date(b.booking_date).toISOString().split('T')[0];
+        return dbDateOnly === formattedDate;
       }
-        
-      return b.room_name === room && 
-             b.period === periodLabel && 
-             dbDateOnly === formattedDate;
+
+      // Handle Recurring Bookings (Inclusive Date Range check)
+      if (b.booking_type.toLowerCase() === 'recurring' && b.booking_date && b.until_date) {
+        const startStr = typeof b.booking_date === 'string' ? b.booking_date.split('T')[0] : new Date(b.booking_date).toISOString().split('T')[0];
+        const endStr = typeof b.until_date === 'string' ? b.until_date.split('T')[0] : new Date(b.until_date).toISOString().split('T')[0];
+
+        const startDateTime = new Date(startStr).getTime();
+        const endDateTime = new Date(endStr).getTime();
+
+        return currentDateTime >= startDateTime && currentDateTime <= endDateTime;
+      }
+
+      return false;
     });
   }
 
@@ -200,11 +194,10 @@ export class BookingComponent implements OnInit {
   }
 
   confirmCancel() {
-    // Guard: only the booking owner or an admin can cancel
     if (!this.canCancel) return;
 
     if (this.selectedBooking && this.selectedBooking.id) {
-      this.http.delete(`http://localhost:3000/api/bookings/${this.selectedBooking.id}`).subscribe({
+      this.http.delete(`http://localhost:5000/api/bookings/${this.selectedBooking.id}`).subscribe({
         next: () => {
           this.removeLocalBooking(this.selectedBooking.id);
         },
@@ -224,7 +217,6 @@ export class BookingComponent implements OnInit {
   openBookingModal(room: string, periodLabel: string) {
     const existing = this.getBooking(room, periodLabel);
     if (existing) {
-      // Everyone can view booking info; only the owner or an admin sees the cancel option
       this.selectedBooking = existing;
       this.isViewOpen = true; 
     } else {

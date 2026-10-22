@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-
+import { AuthService } from '../auth';
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -17,7 +17,7 @@ export class LoginComponent {
 
   showPassword = false;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   onLogin() {
     this.errorMessage = '';
@@ -27,30 +27,28 @@ export class LoginComponent {
       return;
     }
 
-    const inputEmail = this.email.trim().toLowerCase();
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const credentials = {
+      username: this.email.trim(),
+      password: this.password
+    };
 
-    const foundUser = registeredUsers.find((u: any) => 
-      u.email.toLowerCase() === inputEmail && u.password === this.password
-    );
+    this.authService.login(credentials).subscribe({
+      next: (response) => {
+        console.log('Login successful:', response);
+        
+        localStorage.setItem('currentUser', JSON.stringify(response));
 
-    if (foundUser) {
-      // Fallback role detection if missing from older registrations
-      if (!foundUser.role) {
-        const isEmailAdmin = inputEmail.endsWith('@admin.com') || inputEmail.endsWith('@admin.liceo.edu.ph');
-        foundUser.role = isEmailAdmin ? 'admin' : 'user';
+        const userRole = response.role || 'user';
+        if (userRole === 'admin') {
+          this.router.navigate(['/dashboard']);
+        } else {
+          this.router.navigate(['/booking']);
+        }
+      },
+      error: (err) => {
+        console.error('Login failed:', err);
+        this.errorMessage = err.error?.error || 'Invalid email or password. Please check your credentials.';
       }
-
-      localStorage.setItem('currentUser', JSON.stringify(foundUser));
-      console.log(`Login successful for: ${foundUser.firstName} ${foundUser.lastName} (${foundUser.role})`);
-
-      if (foundUser.role === 'admin') {
-        this.router.navigate(['/dashboard']);
-      } else {
-        this.router.navigate(['/booking']);
-      }
-    } else {
-      this.errorMessage = 'Invalid email or password. Please check your credentials or register a new account.';
-    }
+    });
   }
 }

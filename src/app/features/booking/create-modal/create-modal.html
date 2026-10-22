@@ -5,6 +5,12 @@
       Create New <span class="highlight-text">Booking</span>
     </h2>
 
+    <!-- Professional Error Notification Banner -->
+    <div *ngIf="errorMessage" class="error-banner">
+      <span class="error-icon">⚠️</span>
+      <p>{{ errorMessage }}</p>
+    </div>
+
     <div class="booking-tabs">
       <button
         type="button"
